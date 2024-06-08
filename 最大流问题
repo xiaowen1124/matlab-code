@@ -1,0 +1,63 @@
+function max_flow_problem()
+    % 定义变量
+    num_edges = 10;
+    
+    % 起点和终点的索引
+    Vs = 1; V1 = 2; V2 = 3; V3 = 4; V4 = 5; Vt = 6;
+    
+    % 边的起点和终点
+    start_nodes = [Vs, Vs, V1, V1, V2, V3, V3, V4, V4, V4];
+    end_nodes = [V1, V2, V2, V3, V3, V4, Vt, V1, V2, Vt];
+    
+    % 边的容量
+    capacities = [12, 6, 6, 5, 7, 4, 15, 3, 5, 6];
+    
+    % 构建线性规划问题的矩阵
+    Aeq = zeros(5, num_edges); % 5个中间节点（不包括源和汇）
+    
+    % 设置中间节点的流量平衡方程
+    for i = 1:num_edges
+        if start_nodes(i) > 1 && start_nodes(i) < 6
+            Aeq(start_nodes(i) - 1, i) = 1;
+        end
+        if end_nodes(i) > 1 && end_nodes(i) < 6
+            Aeq(end_nodes(i) - 1, i) = -1;
+        end
+    end
+    
+    % 目标函数系数
+    f = zeros(1, num_edges);
+    f(start_nodes == Vs) = -1; % 最大化从Vs流出的流量
+    
+    % 边的流量约束
+    lb = zeros(num_edges, 1);
+    ub = capacities';
+    
+    % 调用linprog求解最大流问题
+    options = optimoptions('linprog', 'Algorithm', 'dual-simplex', 'Display', 'off');
+    [x, fval] = linprog(f, [], [], Aeq, zeros(5, 1), lb, ub, options);
+    
+    % 输出结果
+    disp('每条边的流量：');
+    for i = 1:num_edges
+        fprintf('从 %d 到 %d 的流量: %.2f\n', start_nodes(i), end_nodes(i), x(i));
+    end
+    fprintf('最大流量: %.2f\n', -fval);
+end
+
+%调用函数
+max_flow_problem()
+
+%%%结果
+每条边的流量：
+从 1 到 2 的流量: 6.00
+从 1 到 3 的流量: 6.00
+从 2 到 3 的流量: 1.00
+从 2 到 4 的流量: 5.00
+从 3 到 4 的流量: 7.00
+从 4 到 5 的流量: 0.00
+从 4 到 6 的流量: 12.00
+从 5 到 2 的流量: 0.00
+从 5 到 3 的流量: 0.00
+从 5 到 6 的流量: 0.00
+最大流量: 12.00
